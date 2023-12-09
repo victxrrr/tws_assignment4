@@ -58,7 +58,7 @@ namespace ivp {
     }
 
     template <typename wp, typename F, typename G>
-    void EulerBackward(wp const T, int const N, ublas::vector<wp>& tk, ublas::matrix<wp>& x, F const& f, G const& jac_f, wp const tol=1e-10, int const nmax=100) 
+    void EulerBackward(wp const T, int const N, ublas::vector<wp>& tk, ublas::matrix<wp>& x, F const& f, G const& jac_f, wp const tol=std::numeric_limits<wp>::epsilon(), int const nmax=100) 
     {
         ublas::vector<wp> bx;
         ublas::matrix<wp> A;

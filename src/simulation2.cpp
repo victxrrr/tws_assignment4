@@ -12,10 +12,12 @@ template <typename wp>
 ublas::vector<wp> f(ublas::vector<wp> const& xk)
 {
     ublas::vector<wp> eval(50);
-    for (int i = 0; i < 50; i++)
-    {
-        eval(i) = -10*pow(xk(i) - 0.1*i,3);
-    }
+    ublas::vector<int> tmp(50);
+    std::iota(tmp.begin(), tmp.end(), 0);
+    std::transform(xk.begin(), xk.end(), tmp.begin(), eval.begin(),
+                    [](double elem, int index) {
+                        return -10.0 * std::pow(elem - index * 0.1, 3);
+                    });
     return eval;
 }
 
@@ -23,10 +25,12 @@ template <typename wp>
 ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>> jac_f(ublas::vector<wp> const& xk)
 {
     ublas::vector<wp> diag(50);
-    for (int i = 0; i < 50; i++)
-    {
-        diag(i) = -30*pow(xk(i) - 0.1*i, 2);
-    }
+    ublas::vector<int> tmp(50);
+    std::iota(tmp.begin(), tmp.end(), 0);
+    std::transform(xk.begin(), xk.end(), tmp.begin(), diag.begin(),
+                    [](double elem, int index) {
+                        return -30.0 * std::pow(elem - index * 0.1, 2);
+                    });
     ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>> eval(50, diag);
     return eval;
 }
@@ -37,10 +41,12 @@ struct f_functor
     ublas::vector<wp> operator()(ublas::vector<wp> const& xk) const
     {
         ublas::vector<wp> eval(50);
-        for (int i = 0; i < 50; i++)
-        {
-            eval(i) = -10*pow(xk(i) - 0.1*i,3);
-        }
+        ublas::vector<int> tmp(50);
+        std::iota(tmp.begin(), tmp.end(), 0);
+        std::transform(xk.begin(), xk.end(), tmp.begin(), eval.begin(),
+                        [](double elem, int index) {
+                            return -10.0 * std::pow(elem - index * 0.1, 3);
+                        });
         return eval;
     }
 };
@@ -51,15 +57,45 @@ struct jac_f_functor
     ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>> operator()(ublas::vector<wp> const& xk) const
     {
         ublas::vector<wp> diag(50);
-        for (int i = 0; i < 50; i++)
-        {
-            diag(i) = -30*pow(xk(i) - 0.1*i, 2);
-        }
+        ublas::vector<int> tmp(50);
+        std::iota(tmp.begin(), tmp.end(), 0);
+        std::transform(xk.begin(), xk.end(), tmp.begin(), diag.begin(),
+                        [](double elem, int index) {
+                            return -30.0 * std::pow(elem - index * 0.1, 2);
+                        });
         ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>> eval(50, diag);
         return eval;
     }
 
 };
+
+template <typename wp>
+auto f_lambda = [] (ublas::vector<wp> const& xk) -> ublas::vector<wp> 
+{
+    ublas::vector<wp> eval(50);
+    ublas::vector<int> tmp(50);
+    std::iota(tmp.begin(), tmp.end(), 0);
+    std::transform(xk.begin(), xk.end(), tmp.begin(), eval.begin(),
+                    [](double elem, int index) {
+                        return -10.0 * std::pow(elem - index * 0.1, 3);
+                    });
+    return eval;
+};
+
+template <typename wp>
+auto jac_f_lambda = [] (ublas::vector<wp> const& xk) -> ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>>
+{
+    ublas::vector<wp> diag(50);
+    ublas::vector<int> tmp(50);
+    std::iota(tmp.begin(), tmp.end(), 0);
+    std::transform(xk.begin(), xk.end(), tmp.begin(), diag.begin(),
+                    [](double elem, int index) {
+                        return -30.0 * std::pow(elem - index * 0.1, 2);
+                    });
+    ublas::diagonal_matrix<wp, ublas::row_major, ublas::vector<wp>> eval(50, diag);
+    return eval;
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -84,14 +120,15 @@ int main(int argc, char *argv[])
     ivp::DisplayResults(tk, x, "./output/fwe_simulation2.out");
 
     QuickInit();
+    ivp::Heun(T, N, tk, x, f_lambda<double>);
+    ivp::DisplayResults(tk, x, "./output/heun_simulation2.out");
+
     f_functor<double> theFunction;
     jac_f_functor<double> theJacobian;
-    ivp::Heun(T, N, tk, x, theFunction);
-    ivp::DisplayResults(tk, x, "./output/heun_simulation2f.out");
 
     QuickInit();
     ivp::EulerBackward(T, N, tk, x, theFunction, theJacobian);
-    ivp::DisplayResults(tk, x, "./output/bwe_simulation2f.out");
+    ivp::DisplayResults(tk, x, "./output/bwe_simulation2.out");
 
     return 0;
 }

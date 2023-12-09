@@ -1,0 +1,8 @@
+## Executables
+*.out 
+
+## Object files
+*.o
+
+## Log files
+*.log *.aux
